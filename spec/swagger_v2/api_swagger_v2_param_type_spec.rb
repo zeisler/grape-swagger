@@ -12,7 +12,7 @@ describe 'setting of param type, such as `query`, `path`, `formData`, `body`, `h
         desc 'full set of request param types',
              success: Entities::UseResponse
         params do
-          optional :in_query, type: String, documentation: { param_type: 'query' }
+          optional :in_query, types: [String, Integer], documentation: { param_type: 'query' }
           optional :in_header, type: String, documentation: { param_type: 'header' }
         end
 
@@ -142,8 +142,8 @@ describe 'setting of param type, such as `query`, `path`, `formData`, `body`, `h
     specify do
       expect(subject['paths']['/defined_param_type']['get']['parameters']).to eql(
         [
-          { 'in' => 'query', 'name' => 'in_query', 'required' => false, 'type' => 'string' },
-          { 'in' => 'header', 'name' => 'in_header', 'required' => false, 'type' => 'string' }
+          { 'in' => 'query', 'name' => 'in_query', 'required' => false, 'type' => 'string', 'x-types' => [{'type'=>'string'}, {'format'=>'int32', 'type'=>'integer'}] },
+          { 'in' => 'header', 'name' => 'in_header', 'required' => false, 'type' => 'string'}
         ]
       )
     end

@@ -35,13 +35,15 @@ describe 'Params Multi Types' do
         'in' => 'formData',
         'name' => 'input',
         'type' => 'string',
-        'required' => true
+        'required' => true,
+        'x-types'=>[{'type'=>'string'}, {'format'=>'int32', 'type'=>'integer'}]
       },
       {
         'in' => 'formData',
         'name' => 'another_input',
         'type' => 'string',
-        'required' => true
+        'required' => true,
+        'x-types'=>[{'type'=>'string'}, {'format'=>'int32', 'type'=>'integer'}]
       }
     ]
   end

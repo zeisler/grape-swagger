@@ -4,46 +4,45 @@ module GrapeSwagger
   module DocMethods
     class DataType
       class << self
-        def call(value)
+        def call(value, return_all_types: false)
           raw_data_type = value.is_a?(Hash) ? value[:type] : value
-          raw_data_type ||= 'String'
-          raw_data_type = parse_multi_type(raw_data_type)
-
-          case raw_data_type.to_s
-          when 'Boolean', 'Date', 'Integer', 'String', 'Float', 'JSON', 'Array'
-            raw_data_type.to_s.downcase
-          when 'Hash'
-            'object'
-          when 'Rack::Multipart::UploadedFile', 'File'
-            'file'
-          when 'Virtus::Attribute::Boolean'
-            'boolean'
-          when 'BigDecimal'
-            'double'
-          when 'DateTime', 'Time'
-            'dateTime'
-          when 'Numeric'
-            'long'
-          when 'Symbol'
-            'string'
-          else
-            parse_entity_name(raw_data_type)
-          end
+          parse_multi_type(raw_data_type || 'String').map do |raw_data_type|
+            case raw_data_type.to_s
+            when 'Boolean', 'Date', 'Integer', 'String', 'Float', 'JSON', 'Array'
+              raw_data_type.to_s.downcase
+            when 'Hash'
+              'object'
+            when 'Rack::Multipart::UploadedFile', 'File'
+              'file'
+            when 'Virtus::Attribute::Boolean'
+              'boolean'
+            when 'BigDecimal'
+              'double'
+            when 'DateTime', 'Time'
+              'dateTime'
+            when 'Numeric'
+              'long'
+            when 'Symbol'
+              'string'
+            else
+              parse_entity_name(raw_data_type)
+            end
+          end.uniq.public_send(return_all_types ? :itself : :first)
         end
 
         def parse_multi_type(raw_data_type)
           case raw_data_type
           when /\A\[.*\]\z/
-            type_as_string = raw_data_type.gsub(/[\[\s+\]]/, '').split(',').first
+            types_as_string = raw_data_type.gsub(/[\[\s+\]]/, '').split(',')
             begin
-              Object.const_get(type_as_string)
+              types_as_string.map {|type| Object.const_get(type) }
             rescue NameError
-              type_as_string
+              types_as_string
             end
           when Array
-            raw_data_type.first
-          else
             raw_data_type
+          else
+            [raw_data_type]
           end
         end
 
