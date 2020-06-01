@@ -8,8 +8,8 @@ module GrapeSwagger
           method = route.request_method
           additional_documentation = settings.fetch(:documentation, {})
           settings.merge!(additional_documentation)
-          data_type = DataType.call(settings)
-
+          data_types = DataType.call(settings)
+          data_type = data_types.first
           value_type = settings.merge(data_type: data_type, path: path, param_name: param, method: method)
 
           # required properties
@@ -21,6 +21,7 @@ module GrapeSwagger
           # optional properties
           document_description(settings)
           document_type_and_format(settings, data_type)
+          document_types_and_format(settings, data_types)
           document_array_param(value_type, definitions) if value_type[:is_array]
           document_default_value(settings) unless value_type[:is_array]
           document_range_values(settings) unless value_type[:is_array]
@@ -53,14 +54,24 @@ module GrapeSwagger
           @parsed_param[:default] = settings[:default] if settings[:default].present?
         end
 
-        def document_type_and_format(settings, data_type)
+        def document_type_and_format(settings, data_type, source=@parsed_param)
           if DataType.primitive?(data_type)
             data = DataType.mapping(data_type)
-            @parsed_param[:type], @parsed_param[:format] = data
+            source[:type], source[:format] = data
           else
-            @parsed_param[:type] = data_type
+            source[:type] = data_type
           end
-          @parsed_param[:format] = settings[:format] if settings[:format].present?
+          source[:format] = settings[:format] if settings[:format].present?
+        end
+
+        def document_types_and_format(settings, data_types)
+          if data_types.count > 1
+            @parsed_param["x-types"] = []
+            data_types.each do |data_type|
+              @parsed_param["x-types"] << {}
+              document_type_and_format(settings, data_type,  @parsed_param["x-types"].last)
+            end
+          end
         end
 
         def document_add_extensions(settings)
